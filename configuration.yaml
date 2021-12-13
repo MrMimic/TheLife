@@ -1,3 +1,15 @@
-evolution:
-  rate:
-    mutation: 1
+program:
+  root_path: C:\Users\a760408\CODE\TheLife\
+
+world:
+  population:
+    limit: 2
+
+cells:
+  dna_size: 0.001  # In Mbp (milions base pairs)
+  evolution:
+    mutation_rate: 0.1  # 0.1% of mutation chance
+  energy:
+    maximum: 100
+  reproduction:
+    energy_cost: 10
