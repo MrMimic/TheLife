@@ -44,7 +44,7 @@ class Earth(object):
 
         Args:
             organism (Any): the organism to populate the planet with.
-        """        
+        """
         # The organism type is provided for now
         max_population = self.configuration.world.population.limit
         self.population = [organism(self.run_folder, self.configuration) for _ in range(max_population)]
@@ -56,20 +56,25 @@ class Earth(object):
 
         Args:
             day_number (int): the actual number of days lived.
-        """        
-        self.logger.info(f"Starting day {day_number}")
-        for individual in self.population:
+        """
+        if len([individual for individual in self.population if individual.is_alive]) > 0:
 
-            # Get ennergy (breathe / eat)
-            individual.breathe(air_composition=self.atmosphere.elements)
-            individual.eat(biomass_composition=self.biomass.components)
+            self.logger.info(f"Starting day {day_number}")
+            for individual in self.population:
 
-            # Mutate and get acquired genes
-            individual.mutate()
+                # Some are dying in the process of living
+                if individual.is_alive:
 
-            # Process environment with genes (need energy)
-            individual.move()
-            # Reproduce
+                    # Get ennergy (breathe / eat)
+                    individual.breathe(air_composition=self.atmosphere.elements)
+                    individual.eat(biomass_composition=self.biomass.components)
 
-            # Sleep / die
-            individual.sleep()
+                    # Mutate and get acquired genes
+                    individual.mutate()
+
+                    # Process environment with genes (need energy)
+                    individual.move()
+                    # Reproduce
+
+                    # Sleep / die
+                    individual.sleep(day=day_number)

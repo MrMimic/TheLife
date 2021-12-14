@@ -47,6 +47,9 @@ class Cell(object):
         self.position: Tuple[int, int] = (0, 0)
         """ Cell position on the planet. """
 
+        self.is_alive: bool = True
+        """ Cell is alive or not. """
+
     def _generate_dna(self) -> None:
         """
         The DNA is composed of 4 nucleotids.
@@ -149,13 +152,13 @@ class Cell(object):
         for resource in resources:
             # Increase ennergy regarding the proportion of the gas
             self.logger.debug(
-                f"Cell {mode} {resource.name}: {resource.percentage}%, {resource.energy} energy points restaured")
+                f"Cell {mode} {resource.name}: {resource.percentage}%, {resource.energy} EU restaured")
             # Here, the energy restaured should correspond to the actual energy of the element
             if self.energy < self.configuration.cells.energy.maximum:
                 if self.energy + resource.energy < self.configuration.cells.energy.maximum:
                     self.energy += resource.energy
                 else:
-                    self.logger.info(f"Cell energy is filled up, by {mode} {resource.name}")
+                    self.logger.info(f"Cell EU is filled up, by {mode} {resource.name}")
                     self.energy = self.configuration.cells.energy.maximum
 
     def breathe(self, air_composition: List[Element]) -> None:
@@ -180,13 +183,27 @@ class Cell(object):
         if possible_nutrients is not None:
             self._restaure(resources=possible_nutrients, mode="eating")
 
+    @staticmethod
+    def _compute_distance(x: List[int], y: List[int]) -> float:
+        """
+        Compute the distance between two points.
+
+        Args:
+            x (List[int]): The first point.
+            y (List[int]): The second point.
+
+        Returns:
+            float: The distance between the two points.
+        """
+        return round(hypot(x[0] - y[0], x[1] - y[1]), 3)
+
     def move(self) -> None:
         """
         Move the cell to a new position.
         """
         # Check if the cell can move
         if self.energy > 0:
-            # Maximum radius is computed from the energy of the cell (one energy unit = one distance unit)
+            # Maximum radius is computed from the energy of the cell (one EU = one DU)
             max_steps = self.energy / 2
             original_position = self.position
             steps = 0
@@ -202,6 +219,7 @@ class Cell(object):
                 self.energy -= 1
             # If the cell has not moved, it is not able to move anymore
             distance = round(hypot(original_position[0] - self.position[0], original_position[1] - self.position[1]), 3)
+            distance = self._compute_distance(original_position, self.position)
             self.logger.info(
                 f"Cell moved {distance} distance units (from {original_position} to {self.position}) in {steps} steps")
 
@@ -213,8 +231,15 @@ class Cell(object):
         self.energy -= self.configuration.cells.reproduction.energy_cost
         # Chance to reproduce
 
-    def sleep(self) -> None:
+    def sleep(self, day: int) -> None:
         """
-        Sleep.
+        The end of the day. An amount of energy is filled up during the night, or the cell ends its life.
+
+        Args:
+            day (int): The day of the simulation.
         """
-        self.logger.debug("TODO: Sleeping")
+        # The cell dies of exhaustion
+        if self.energy <= 0:
+            distance = self._compute_distance((0, 0), self.position)
+            self.logger.info(f"No more energy on day {day}. Cell reached {self.position} after {distance}DU")
+            self.is_alive = False
