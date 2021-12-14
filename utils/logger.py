@@ -6,7 +6,7 @@ from logging import handlers
 
 def get_logger(log_folder: str,
                log_name: str,
-               log_level: int = logging.INFO,
+               log_level: int = logging.DEBUG,
                max_logfile_size: int = 5) -> logging.Logger:
     # Get a logger
     log_file_path = os.path.join(log_folder, f"{log_name}.log")

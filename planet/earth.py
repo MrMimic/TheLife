@@ -1,9 +1,11 @@
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List
+from types import SimpleNamespace
+from typing import Any, List
 from uuid import uuid4
 
+from utils.drawers import Drawer
 from utils.logger import get_logger
 
 from planet.inanimated_elements.air_composition import Atmosphere, Element
@@ -21,13 +23,14 @@ class Earth(object):
 
     population: List[Any] = field(default_factory=list)
     """ The population of the planet (cells, peoples, etc) """
-
-    def __init__(self, configuration) -> None:
+    def __init__(self, configuration: SimpleNamespace) -> None:
         self.configuration = configuration
         self.run_folder = os.path.join(self.configuration.program.root_path, "runs",
                                        datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
         self.log_folder = os.path.join(self.run_folder, "logs")
-        os.makedirs(self.log_folder)
+        self.draw_folder = os.path.join(self.run_folder, "draws", "earth")
+        for folder in [self.log_folder, self.draw_folder]:
+            os.makedirs(folder)
 
         # Planet components
         self.atmosphere: List[Element] = Atmosphere()
@@ -35,8 +38,14 @@ class Earth(object):
 
         # Planet logger
         self.planet_name = f"{self.__class__.__name__}_{uuid4()}"
-        self.logger = get_logger(self.log_folder, self.planet_name)
+        print(self.configuration.program.logs.level)
+        self.logger = get_logger(log_folder=self.log_folder,
+                                 log_name=self.planet_name,
+                                 log_level=self.configuration.program.logs.level.upper())
         self.logger.info(f"Planet {self.planet_name} created")
+
+        # Planet drawer
+        self.drawer = Drawer(self.draw_folder, self.configuration)
 
     def populate(self, organism: Any):
         """
@@ -74,7 +83,15 @@ class Earth(object):
 
                     # Process environment with genes (need energy)
                     individual.move()
+
                     # Reproduce
 
                     # Sleep / die
                     individual.sleep(day=day_number)
+
+            # Draw the world at the end of each day
+            self.drawer.draw_world(day=day_number, world=self)
+
+        # Draw a GIF representing the world during the run
+        if day_number == self.configuration.world.life.days:
+            self.drawer.create_world_gif()

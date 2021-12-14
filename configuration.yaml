@@ -1,9 +1,16 @@
 program:
   root_path: C:\Users\a760408\CODE\TheLife\
+  logs:
+    level: info  # debug, info, warning, error
+  drawings:
+    dpi: 200
+    height: 10  # In inches
+    width: 10  # In inches
 
 world:
+  size: 15
   life:
-    days: 31  # Number of days to live
+    days: 15  # Number of days to live
   population:
     limit: 1
 

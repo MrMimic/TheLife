@@ -27,7 +27,9 @@ class Cell(object):
         self.cell_name = f"{self.__class__.__name__}_{uuid4()}"
         """ Cell name with an uniq UUID """
 
-        self.logger = get_logger(log_folder=os.path.join(run_path, "logs"), log_name=self.cell_name)
+        self.logger = get_logger(log_folder=os.path.join(run_path, "logs"),
+                                 log_name=self.cell_name,
+                                 log_level=self.configuration.program.logs.level.upper())
         self.logger.info(f"Cell creation: {self.__class__.__name__} ({self.cell_name})")
         """ Cell logger """
 
@@ -45,6 +47,7 @@ class Cell(object):
         """ DNA is the genetic code of the cell. Generates it and get first genes. """
 
         self.position: Tuple[int, int] = (0, 0)
+        self.positions: List[Tuple[int, int]] = [self.position]
         """ Cell position on the planet. """
 
         self.is_alive: bool = True
@@ -151,8 +154,7 @@ class Cell(object):
         # Up ennergy with the one that have been found
         for resource in resources:
             # Increase ennergy regarding the proportion of the gas
-            self.logger.debug(
-                f"Cell {mode} {resource.name}: {resource.percentage}%, {resource.energy} EU restaured")
+            self.logger.debug(f"Cell {mode} {resource.name}: {resource.percentage}%, {resource.energy} EU restaured")
             # Here, the energy restaured should correspond to the actual energy of the element
             if self.energy < self.configuration.cells.energy.maximum:
                 if self.energy + resource.energy < self.configuration.cells.energy.maximum:
@@ -217,6 +219,8 @@ class Cell(object):
                 steps += 1
                 # Moving forward cost energy
                 self.energy -= 1
+            # Keep a track of all positions of the cell for drawing
+            self.positions.append(self.position)
             # If the cell has not moved, it is not able to move anymore
             distance = round(hypot(original_position[0] - self.position[0], original_position[1] - self.position[1]), 3)
             distance = self._compute_distance(original_position, self.position)
