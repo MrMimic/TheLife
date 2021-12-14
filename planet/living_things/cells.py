@@ -120,7 +120,7 @@ class Cell(object):
                     self.energy += proportion
                 else:
                     self.logger.info(f"Cell energy is filled up, by breathing {gas}")
-                    self.energy = self.max_energy
+                    self.energy = self.configuration.cells.energy.maximum
 
     def reproduce(self) -> None:
         """

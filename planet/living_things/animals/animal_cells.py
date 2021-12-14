@@ -10,8 +10,6 @@ class AnimalCell(Cell):
     A cell needs enough space to live
     """
     def __init__(self, run_path: str, configuration: SimpleNamespace) -> None:
-        # Store cell type
-        self.cell_type = "animal"
         # Possible genes for this cell. Aquired by DNA mutation.
         # Genes are only present at start if you get lucky during DNA initialisation.
         self.gene_pool: List[Gene] = [
