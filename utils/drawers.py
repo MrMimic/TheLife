@@ -5,6 +5,7 @@ from typing import Any
 
 import imageio
 from matplotlib import pyplot as plt
+from matplotlib.patches import Rectangle
 
 
 class Drawer:
@@ -36,7 +37,9 @@ class Drawer:
             alpha = 0.1
             alpha_step = 0.9 / len(individual.positions)
             last_position = (0, 0)
-            for index, position in enumerate(individual.positions):
+
+            for index, (position, biome) in enumerate(zip(individual.positions, individual.visited_biomes)):
+
                 x_values = [last_position[0], position[0]]
                 y_values = [last_position[1], position[1]]
                 plt.plot(x_values, y_values, color=individual.color, alpha=alpha, linewidth=0.5, linestyle="-")
@@ -67,6 +70,12 @@ class Drawer:
                                      color=individual.color,
                                      markersize=10)
 
+                    # Also draw visited biomes
+                    ax = plt.gca()
+                    biome_rectangle = plt.Rectangle(biome.coord_1, 1, 1, alpha=alpha, color=individual.color)
+                    ax.add_patch(biome_rectangle)
+
+                    # Update alpha and last position for next plot
                     alpha += alpha_step
                     last_position = position
 

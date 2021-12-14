@@ -152,6 +152,7 @@ class Cell(object):
         if len(usable_resource) == 0:
             return None
         else:
+            self.logger.info(f"Found resources in biome: {', '.join([element.name for element in usable_resource])}")
             return usable_resource
 
     def _restaure(self, resources: List[Union[Element, Nutrient]], mode: str) -> None:
@@ -215,6 +216,10 @@ class Cell(object):
         """
         Move the cell to a new position.
         """
+        # Use this method to check is the first biome has been inserted
+        if self.visited_biomes == []:
+            self.visited_biomes.append(self._find_actual_biome(biomes=biomes, position=self.position))
+
         # Check if the cell can move
         if self.energy > 0:
 
