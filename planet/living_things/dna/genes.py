@@ -12,6 +12,9 @@ class Gene:
     process_component: str
     """ Name of the chemical component this gene process """
 
+    compopent_from: str
+    """ Component coming from which medium """
+
     sequence: str
     """ Genetic sequence of the gene"""
 

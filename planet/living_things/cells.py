@@ -1,10 +1,11 @@
 import os
 from random import choice, random
 from types import SimpleNamespace
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 from planet.inanimated_elements.air_composition import Element
+from planet.inanimated_elements.biomass_composition import Nutrient
 from planet.living_things.dna.genes import Gene
 from utils.logger import get_logger
 
@@ -45,7 +46,8 @@ class Cell(object):
         old_gene_list = self.gene_list
         for gene in self.gene_pool:
             if gene.sequence in self.dna and not gene.acquired:
-                self.logger.info(f"Acquisition of gene {gene.name} to process {gene.process_component}")
+                self.logger.info(
+                    f"Acquisition of gene {gene.name} to process {gene.process_component} from {gene.compopent_from}")
                 gene.acquired = True
             # The mutation lost the gene
             elif gene.sequence not in self.dna and gene.acquired:
@@ -92,34 +94,48 @@ class Cell(object):
                 if key == element:
                     return self.__getattribute__(facility)[key]
 
-    def _find_breathable_gas(self, air_composition: List[Element]) -> Optional[Dict[str, str]]:
+    def _find_usable_resource(self, medium_composition: List[Element]) -> Optional[Dict[str, str]]:
         """
-        Find breathable gas
+        Find usable resource regarding acquired genes
         """
         acquired_element_process = [gene.process_component for gene in self.gene_list if gene.acquired]
-        breathable_gas = [element for element in air_composition if element.name.lower() in acquired_element_process]
-        if len(breathable_gas) == 0:
+        usable_resource = [
+            element for element in medium_composition if element.name.lower() in acquired_element_process
+        ]
+        if len(usable_resource) == 0:
             return None
         else:
-            return breathable_gas
+            return usable_resource
+
+    def _restaure(self, resources: List[Union[Element, Nutrient]], mode: str) -> None:
+        # Up ennergy with the one that have been found
+        for resource in resources:
+            # Increase ennergy regarding the proportion of the gas
+            self.logger.debug(
+                f"Cell {mode} {resource.name}: {resource.percentage}%, {resource.energy} energy points restaured")
+            # Here, the energy restaured should correspond to the actual energy of the element
+            if self.energy < self.configuration.cells.energy.maximum:
+                if self.energy + resource.energy < self.configuration.cells.energy.maximum:
+                    self.energy += resource.energy
+                else:
+                    self.logger.info(f"Cell energy is filled up, by {mode} {resource.name}")
+                    self.energy = self.configuration.cells.energy.maximum
 
     def breathe(self, air_composition: Dict[str, float]) -> None:
         """
-        Breathe in air
+        Breathe air
         """
-        possible_breathing = self._find_breathable_gas(air_composition)
+        possible_breathing = self._find_usable_resource(medium_composition=air_composition)
         if possible_breathing is not None:
-            # Up ennergy with the one that have been found
-            for gas in possible_breathing:
-                # Increase ennergy regarding the proportion of the gas
-                self.logger.debug(f"Breathing {gas.name}: {gas.percentage}%, {gas.energy} energy points restaured")
-                # Here, the energy restaured should correspond to the actual energy of the element
-                if self.energy < self.configuration.cells.energy.maximum:
-                    if self.energy + gas.energy < self.configuration.cells.energy.maximum:
-                        self.energy += gas.energy
-                    else:
-                        self.logger.info(f"Cell energy is filled up, by breathing {gas}")
-                        self.energy = self.configuration.cells.energy.maximum
+            self._restaure(resources=possible_breathing, mode="breathing")
+
+    def eat(self, biomass_composition: Dict[str, float]) -> None:
+        """
+        Eat food
+        """
+        possible_nutrients = self._find_usable_resource(medium_composition=biomass_composition)
+        if possible_nutrients is not None:
+            self._restaure(resources=possible_nutrients, mode="eating")
 
     def reproduce(self) -> None:
         """
@@ -128,14 +144,6 @@ class Cell(object):
         # Reproduction uses energy no matter the success
         self.energy -= self.configuration.cells.reproduction.energy_cost
         # Chance to reproduce
-
-    def eat(self, food_composition: Dict[str, float]) -> None:
-        """
-        Eat food
-        """
-        food = "stuff"
-        energy = 42
-        self.logger.debug(f"TODO: Eating {food}: {energy} energy points restaured")
 
     def sleep(self) -> None:
         """

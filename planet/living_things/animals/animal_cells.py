@@ -13,10 +13,14 @@ class AnimalCell(Cell):
         # Possible genes for this cell. Aquired by DNA mutation.
         # Genes are only present at start if you get lucky during DNA initialisation.
         self.gene_pool: List[Gene] = [
-            Gene(name="NAR1", process_component="nitrogen", sequence="AATCGA"),
-            Gene(name="OX42", process_component="oxygen", sequence="ATTGCA"),
-            Gene(name="ARgo12", process_component="argon", sequence="AATCGACC"),
-            Gene(name="CD0CD", process_component="carbon_dioxyde", sequence="AATCGAAAC")
+            # Gas processing from the atmosphere
+            Gene(name="NAR1", process_component="nitrogen", sequence="AATCGA", compopent_from="air"),
+            Gene(name="OX42", process_component="oxygen", sequence="ATTGCA", compopent_from="air"),
+            Gene(name="ARgo12", process_component="argon", sequence="AATCGACC", compopent_from="air"),
+            Gene(name="CD0CD", process_component="carbon_dioxyde", sequence="AATCGAAAC", compopent_from="air"),
+            # Component processing from the biomass
+            Gene(name="NAR24", process_component="nitrogen", sequence="AATCGACTG", compopent_from="biomass"),
+            Gene(name="CarBas3", process_component="carbon", sequence="ATTATTGAC", compopent_from="biomass"),
         ]
         # Initialise cell
         super().__init__(run_path, configuration)

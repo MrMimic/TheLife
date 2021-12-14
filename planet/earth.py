@@ -4,8 +4,10 @@ from datetime import datetime
 from typing import Any, Dict, List
 from uuid import uuid4
 
-from planet.inanimated_elements.air_composition import Atmosphere, Element
 from utils.logger import get_logger
+
+from planet.inanimated_elements.air_composition import Atmosphere, Element
+from planet.inanimated_elements.biomass_composition import Biomass, Nutrient
 
 
 @dataclass
@@ -19,7 +21,6 @@ class Earth(object):
 
     population: List[Any] = field(default_factory=list)
     """ The population of the planet (cells, peoples, etc) """
-
     def __init__(self, configuration) -> None:
         self.configuration = configuration
         self.run_folder = os.path.join(self.configuration.program.root_path, "runs",
@@ -29,7 +30,7 @@ class Earth(object):
 
         # Planet components
         self.atmosphere: List[Element] = Atmosphere()
-        self.food: Dict[str, float] = {}
+        self.biomass: List[Nutrient] = Biomass()
 
         # Planet logger
         self.planet_name = f"{self.__class__.__name__}_{uuid4()}"
@@ -48,7 +49,7 @@ class Earth(object):
 
             # Get ennergy (breathe / eat)
             individual.breathe(air_composition=self.atmosphere.elements)
-            # individual.eat(self.food)
+            individual.eat(biomass_composition=self.biomass.components)
 
             # Mutate and get acquired genes
             individual.mutate()

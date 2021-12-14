@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from typing import List
 
+from planet.inanimated_elements.composition import Component
+
 
 @dataclass
-class Element:
+class Element(Component):
     name: str
     """ Name of the element """
 
