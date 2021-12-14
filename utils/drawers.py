@@ -84,7 +84,8 @@ class Drawer:
         Create a gif from the images in the draw folder.
         """
         gif_path = join(self.draw_folder, f"{self.__class__.__name__}.gif")
-        imageio.mimsave(
-            gif_path, [imageio.imread(join(self.draw_folder, file_name)) for file_name in os.listdir(self.draw_folder)],
-            format="GIF",
-            duration=0.5)
+        gif_files = [file for file in os.listdir(self.draw_folder) if file.endswith(".png")]
+        images = []
+        for file_index in range(1, len(gif_files) + 1):
+            images.append(imageio.imread(join(self.draw_folder, f"day_{file_index}.png")))
+        imageio.mimsave(gif_path, images, format="GIF", duration=0.5)
