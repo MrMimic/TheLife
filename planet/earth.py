@@ -2,14 +2,29 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from types import SimpleNamespace
-from typing import Any, List
+from typing import Any, List, Union
 from uuid import uuid4
-
+from random import sample, randint
 from utils.drawers import Drawer
 from utils.logger import get_logger
-
+import string
 from planet.inanimated_elements.air_composition import Atmosphere, Element
 from planet.inanimated_elements.biomass_composition import Biomass, Nutrient
+
+
+@dataclass
+class Biome:
+    name: str
+    """ Name of the biome """
+
+    coord_1: List[int]
+    """ Coordinates of the first point of the biome """
+
+    coord_2: List[int]
+    """ Coordinates of the second point of the biome """
+
+    contains: List[Union[Element, Nutrient]]
+    """ List of elements or nutrients contained in the biome """
 
 
 @dataclass
@@ -36,9 +51,11 @@ class Earth(object):
         self.atmosphere: List[Element] = Atmosphere()
         self.biomass: List[Nutrient] = Biomass()
 
+        # Spread the biomass on the planet
+        self.add_biomes()
+
         # Planet logger
         self.planet_name = f"{self.__class__.__name__}_{uuid4()}"
-        print(self.configuration.program.logs.level)
         self.logger = get_logger(log_folder=self.log_folder,
                                  log_name=self.planet_name,
                                  log_level=self.configuration.program.logs.level.upper())
@@ -46,6 +63,29 @@ class Earth(object):
 
         # Planet drawer
         self.drawer = Drawer(self.draw_folder, self.configuration)
+
+    def add_biomes(self):
+        # The world is a grid with size
+        map_size = self.configuration.world.size
+
+        # Divide it into a grid of biomes (each biome is the coordinates of 2 diagonals)
+        number_letter_mapping = {
+            number: letter
+            for number, letter in zip(range(-map_size, map_size + 1), string.ascii_uppercase)
+        }
+
+        # Get the coordinates of biomes
+        self.biomes: List[Biome] = []
+        for x in range(-map_size, map_size):
+            for y in range(-map_size, map_size):
+                coord_1 = (x, y)
+                coord_2 = (x + 1, y + 1)
+                name = f"{number_letter_mapping[y]};{x}"
+                # Randomly chose components and nutrients to be added
+                biome_nutrients = sample(self.biomass.components, randint(1, len(self.biomass.components)))
+                biome_elements = sample(self.atmosphere.elements, randint(1, len(self.biomass.components)))
+                contains = biome_nutrients + biome_elements
+                self.biomes.append(Biome(name=name, coord_1=coord_1, coord_2=coord_2, contains=contains))
 
     def populate(self, organism: Any):
         """

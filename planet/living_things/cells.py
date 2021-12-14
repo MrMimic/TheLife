@@ -47,10 +47,10 @@ class Cell(object):
         self._get_aquiered_genes()
         """ DNA is the genetic code of the cell. Generates it and get first genes. """
 
-        self.position: Tuple[int, int] = (0, 0)
-        self.last_position: Tuple[int, int] = (0, 0)
+        self.position: Tuple[int, int] = (0.5, 0.5)
+        self.last_position: Tuple[int, int] = (0.5, 0.5)
         self.positions: List[Tuple[int, int]] = [self.position]
-        """ Cell position on the planet. """
+        """ Cell position on the planet. Initiated at 0.5 to stay in the middle of the biomes. """
 
         self.is_alive: bool = True
         """ Cell is alive or not. """
