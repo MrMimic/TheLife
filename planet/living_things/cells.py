@@ -1,5 +1,4 @@
 import os
-from math import hypot
 from random import choice, random
 from types import SimpleNamespace
 from typing import List, Optional, Tuple, Union
@@ -11,6 +10,7 @@ from planet.inanimated_elements.biomass_composition import Nutrient
 from planet.living_things.dna.genes import Gene
 from utils.data import directions
 from utils.logger import get_logger
+from utils.maths import point_is_in_map, compute_distance
 
 
 class Cell(object):
@@ -190,39 +190,6 @@ class Cell(object):
         if possible_nutrients is not None:
             self._restaure(resources=possible_nutrients, mode="eating")
 
-    @staticmethod
-    def _compute_distance(x: List[int], y: List[int]) -> float:
-        """
-        Compute the distance between two points.
-
-        Args:
-            x (List[int]): The first point.
-            y (List[int]): The second point.
-
-        Returns:
-            float: The distance between the two points.
-        """
-        return round(hypot(x[0] - y[0], x[1] - y[1]), 3)
-
-    @staticmethod
-    def _point_is_in_map(map_coords: List[List[int]], point_coordinates: List[int]) -> bool:
-        """
-        Check if a point is in the map.
-
-        Args:
-            map_size (int): The size of the map.
-            point_coordinates (List[int]): The coordinates of the point.
-        """
-        # Map size should be a square centered around zero
-
-        x1, y1 = map_coords[0]
-        x2, y2 = map_coords[1]
-        x, y = point_coordinates
-        if (x1 < x and x < x2) and (y1 < y and y < y2):
-            return True
-        else:
-            return False
-
     def move(self) -> None:
         """
         Move the cell to a new position.
@@ -241,7 +208,7 @@ class Cell(object):
                 # Check if the new position is not out of the map
                 map_size = self.configuration.world.size
                 map_coords = [[-map_size, -map_size], [map_size, map_size]]
-                if self._point_is_in_map(map_coords=map_coords, point_coordinates=new_position):
+                if point_is_in_map(map_coords=map_coords, point_coordinates=new_position):
                     self.logger.debug(f"Cell moved from {self.position} to {new_position} (direction: {direction})")
                     self.position = new_position
                     steps += 1
@@ -249,9 +216,7 @@ class Cell(object):
             # Keep a track of all positions of the cell for drawing
             self.positions.append(self.position)
             # If the cell has not moved, it is not able to move anymore
-            distance = round(hypot(self.last_position[0] - self.position[0], self.last_position[1] - self.position[1]),
-                             3)
-            distance = self._compute_distance(self.last_position, self.position)
+            distance = compute_distance(self.last_position, self.position)
             self.logger.info(
                 f"Cell moved {distance} distance units (from {self.last_position} to {self.position}) in {steps} steps")
 
@@ -272,6 +237,6 @@ class Cell(object):
         """
         # The cell dies of exhaustion
         if self.energy <= 0:
-            distance = self._compute_distance((0, 0), self.position)
+            distance = compute_distance((0, 0), self.position)
             self.logger.info(f"No more energy on day {day}. Cell reached {self.position} after {distance}DU")
             self.is_alive = False
