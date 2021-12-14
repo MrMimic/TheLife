@@ -205,7 +205,7 @@ class Cell(object):
         return round(hypot(x[0] - y[0], x[1] - y[1]), 3)
 
     @staticmethod
-    def _point_is_in_map(map_size: int, point_coordinates: List[int]) -> bool:
+    def _point_is_in_map(map_coords: List[List[int]], point_coordinates: List[int]) -> bool:
         """
         Check if a point is in the map.
 
@@ -214,8 +214,9 @@ class Cell(object):
             point_coordinates (List[int]): The coordinates of the point.
         """
         # Map size should be a square centered around zero
-        x1 = y1 = -map_size
-        x2 = y2 = map_size
+
+        x1, y1 = map_coords[0]
+        x2, y2 = map_coords[1]
         x, y = point_coordinates
         if (x1 < x and x < x2) and (y1 < y and y < y2):
             return True
@@ -239,7 +240,8 @@ class Cell(object):
                                 self.position[1] + directions[direction][1])
                 # Check if the new position is not out of the map
                 map_size = self.configuration.world.size
-                if self._point_is_in_map(map_size=map_size, point_coordinates=new_position):
+                map_coords = [[-map_size, -map_size], [map_size, map_size]]
+                if self._point_is_in_map(map_coords=map_coords, point_coordinates=new_position):
                     self.logger.debug(f"Cell moved from {self.position} to {new_position} (direction: {direction})")
                     self.position = new_position
                     steps += 1
