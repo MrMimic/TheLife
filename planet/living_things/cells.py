@@ -5,12 +5,13 @@ from types import SimpleNamespace
 from typing import List, Optional, Tuple, Union
 from uuid import uuid4
 
+import numpy as np
 from planet.inanimated_elements.air_composition import Element
 from planet.inanimated_elements.biomass_composition import Nutrient
 from planet.living_things.dna.genes import Gene
 from utils.data import directions
 from utils.logger import get_logger
-import numpy as np
+
 
 class Cell(object):
     def __init__(self, run_path: str, configuration: SimpleNamespace) -> None:
@@ -47,6 +48,7 @@ class Cell(object):
         """ DNA is the genetic code of the cell. Generates it and get first genes. """
 
         self.position: Tuple[int, int] = (0, 0)
+        self.last_position: Tuple[int, int] = (0, 0)
         self.positions: List[Tuple[int, int]] = [self.position]
         """ Cell position on the planet. """
 
@@ -210,7 +212,7 @@ class Cell(object):
         if self.energy > 0:
             # Maximum radius is computed from the energy of the cell (one EU = one DU)
             max_steps = self.energy / 2
-            original_position = self.position
+            self.last_position = self.position
             steps = 0
             while steps < max_steps:
                 direction = choice(list(directions.keys()))
@@ -225,10 +227,11 @@ class Cell(object):
             # Keep a track of all positions of the cell for drawing
             self.positions.append(self.position)
             # If the cell has not moved, it is not able to move anymore
-            distance = round(hypot(original_position[0] - self.position[0], original_position[1] - self.position[1]), 3)
-            distance = self._compute_distance(original_position, self.position)
+            distance = round(hypot(self.last_position[0] - self.position[0], self.last_position[1] - self.position[1]),
+                             3)
+            distance = self._compute_distance(self.last_position, self.position)
             self.logger.info(
-                f"Cell moved {distance} distance units (from {original_position} to {self.position}) in {steps} steps")
+                f"Cell moved {distance} distance units (from {self.last_position} to {self.position}) in {steps} steps")
 
     def reproduce(self) -> None:
         """

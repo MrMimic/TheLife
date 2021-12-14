@@ -29,19 +29,44 @@ class Drawer:
 
         # Draw the start of all cells
         plt.plot(0, 0, alpha=0.5, marker="o", color="black", markersize=5)
+        plt.title(f"{world.__class__.__name__} - Day {day}")
 
         # Now, all cells with their positions
         for individual in world.population:
             alpha = 0.1
             alpha_step = 0.9 / len(individual.positions)
             last_position = (0, 0)
-            for position in individual.positions:
+            for index, position in enumerate(individual.positions):
                 x_values = [last_position[0], position[0]]
                 y_values = [last_position[1], position[1]]
                 plt.plot(x_values, y_values, color=individual.color, alpha=alpha, linewidth=0.5, linestyle="-")
+                # The alpha of the point must increase as the cell moves are looped from the first
                 if position != (0, 0):
-                    # The alpha of the point must increase as the cell moves are looped from the first
-                    plt.plot(position[0], position[1], alpha=alpha, marker="o", color=individual.color, markersize=5)
+                    # If the cell is alive, use the dot marker
+                    if individual.is_alive is True:
+                        plt.plot(position[0],
+                                 position[1],
+                                 alpha=alpha,
+                                 marker="o",
+                                 color=individual.color,
+                                 markersize=5)
+                    # Else, uses a custom marker to mark the place of death
+                    else:
+                        if index < len(individual.positions) - 1:
+                            plt.plot(position[0],
+                                     position[1],
+                                     alpha=alpha,
+                                     marker="o",
+                                     color=individual.color,
+                                     markersize=5)
+                        else:
+                            plt.plot(position[0],
+                                     position[1],
+                                     alpha=1,
+                                     marker=r"$\spadesuit$",
+                                     color=individual.color,
+                                     markersize=10)
+
                     alpha += alpha_step
                     last_position = position
 
