@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from typing import Dict, List, Optional
 from uuid import uuid4
 
+from planet.inanimated_elements.air_composition import Element
 from planet.living_things.dna.genes import Gene
 from utils.logger import get_logger
 
@@ -91,16 +92,13 @@ class Cell(object):
                 if key == element:
                     return self.__getattribute__(facility)[key]
 
-    def _find_breathable_gas(self, air_composition: Dict[str, float]) -> Optional[Dict[str, str]]:
+    def _find_breathable_gas(self, air_composition: List[Element]) -> Optional[Dict[str, str]]:
         """
         Find breathable gas
         """
-        breathable_gas = {
-            gas: compo
-            for gas, compo in air_composition.items()
-            if gas in [gene.process_component for gene in self.gene_list if gene.acquired]
-        }
-        if len(breathable_gas.keys()) == 0:
+        acquired_element_process = [gene.process_component for gene in self.gene_list if gene.acquired]
+        breathable_gas = [element for element in air_composition if element.name.lower() in acquired_element_process]
+        if len(breathable_gas) == 0:
             return None
         else:
             return breathable_gas
@@ -112,15 +110,16 @@ class Cell(object):
         possible_breathing = self._find_breathable_gas(air_composition)
         if possible_breathing is not None:
             # Up ennergy with the one that have been found
-            for gas, proportion in possible_breathing.items():
+            for gas in possible_breathing:
                 # Increase ennergy regarding the proportion of the gas
-                self.logger.debug(f"Breathing {gas}: {proportion}%, {proportion} energy points restaured")
+                self.logger.debug(f"Breathing {gas.name}: {gas.percentage}%, {gas.energy} energy points restaured")
                 # Here, the energy restaured should correspond to the actual energy of the element
-                if self.energy + proportion < self.configuration.cells.energy.maximum:
-                    self.energy += proportion
-                else:
-                    self.logger.info(f"Cell energy is filled up, by breathing {gas}")
-                    self.energy = self.configuration.cells.energy.maximum
+                if self.energy < self.configuration.cells.energy.maximum:
+                    if self.energy + gas.energy < self.configuration.cells.energy.maximum:
+                        self.energy += gas.energy
+                    else:
+                        self.logger.info(f"Cell energy is filled up, by breathing {gas}")
+                        self.energy = self.configuration.cells.energy.maximum
 
     def reproduce(self) -> None:
         """

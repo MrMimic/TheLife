@@ -4,18 +4,22 @@ from datetime import datetime
 from typing import Any, Dict, List
 from uuid import uuid4
 
+from planet.inanimated_elements.air_composition import Atmosphere, Element
 from utils.logger import get_logger
 
 
 @dataclass
 class Earth(object):
-    """ The diameter of the generated world (km)"""
+
     diameter: int = 12742
-    """ The mass of the generated world (kg) """
+    """ The diameter of the generated world (km)"""
+
     mass: int = 5.97237e24
-    """ The population of the planet (cells, peoples, etc) """
+    """ The mass of the generated world (kg) """
+
     population: List[Any] = field(default_factory=list)
-    """ Air composition (%) """
+    """ The population of the planet (cells, peoples, etc) """
+
     def __init__(self, configuration) -> None:
         self.configuration = configuration
         self.run_folder = os.path.join(self.configuration.program.root_path, "runs",
@@ -24,7 +28,7 @@ class Earth(object):
         os.makedirs(self.log_folder)
 
         # Planet components
-        self.air: Dict[str, float] = {"nitrogen": 78.0, "oxygen": 21.0, "argon": 1.0, "carbon_dioxyde": 0.04}
+        self.atmosphere: List[Element] = Atmosphere()
         self.food: Dict[str, float] = {}
 
         # Planet logger
@@ -43,7 +47,7 @@ class Earth(object):
         for individual in self.population:
 
             # Get ennergy (breathe / eat)
-            individual.breathe(self.air)
+            individual.breathe(air_composition=self.atmosphere.elements)
             # individual.eat(self.food)
 
             # Mutate and get acquired genes
