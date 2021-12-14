@@ -8,9 +8,14 @@ program:
     width: 10  # In inches
 
 world:
+  # The world is a squared grid with a radius length of `size`
+  # The Distance Unit (DU) is 1
+  # All sqared units (1x1) of the world contains one of many components
+  # The simulation runs for `simulation_duration` days
+  # `population_limit` individuals will be added
   size: 8
-  simulation_duration: 15  # Number of days to live
-  population_limit: 2
+  simulation_duration: 15
+  population_limit: 20
 
 cells:
   dna_size: 0.001  # In Mbp (milions base pairs)

@@ -204,6 +204,24 @@ class Cell(object):
         """
         return round(hypot(x[0] - y[0], x[1] - y[1]), 3)
 
+    @staticmethod
+    def _point_is_in_map(map_size: int, point_coordinates: List[int]) -> bool:
+        """
+        Check if a point is in the map.
+
+        Args:
+            map_size (int): The size of the map.
+            point_coordinates (List[int]): The coordinates of the point.
+        """
+        # Map size should be a square centered around zero
+        x1 = y1 = -map_size
+        x2 = y2 = map_size
+        x, y = point_coordinates
+        if (x1 < x and x < x2) and (y1 < y and y < y2):
+            return True
+        else:
+            return False
+
     def move(self) -> None:
         """
         Move the cell to a new position.
@@ -219,11 +237,13 @@ class Cell(object):
                 # Compute the new position
                 new_position = (self.position[0] + directions[direction][0],
                                 self.position[1] + directions[direction][1])
-                self.logger.debug(f"Cell moved from {self.position} to {new_position} (direction: {direction})")
-                self.position = new_position
-                steps += 1
-                # Moving forward cost energy
-                self.energy -= 1
+                # Check if the new position is not out of the map
+                map_size = self.configuration.world.size
+                if self._point_is_in_map(map_size=map_size, point_coordinates=new_position):
+                    self.logger.debug(f"Cell moved from {self.position} to {new_position} (direction: {direction})")
+                    self.position = new_position
+                    steps += 1
+                    self.energy -= 1  # Moving forward cost energy
             # Keep a track of all positions of the cell for drawing
             self.positions.append(self.position)
             # If the cell has not moved, it is not able to move anymore
