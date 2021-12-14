@@ -21,6 +21,7 @@ class Earth(object):
 
     population: List[Any] = field(default_factory=list)
     """ The population of the planet (cells, peoples, etc) """
+
     def __init__(self, configuration) -> None:
         self.configuration = configuration
         self.run_folder = os.path.join(self.configuration.program.root_path, "runs",
@@ -38,12 +39,24 @@ class Earth(object):
         self.logger.info(f"Planet {self.planet_name} created")
 
     def populate(self, organism: Any):
+        """
+        Populate the planet with defined organisms.
+
+        Args:
+            organism (Any): the organism to populate the planet with.
+        """        
         # The organism type is provided for now
         max_population = self.configuration.world.population.limit
         self.population = [organism(self.run_folder, self.configuration) for _ in range(max_population)]
         self.logger.info(f"Planet populated with {max_population} {organism.__name__} individuals")
 
     def live(self, day_number: int):
+        """
+        Make the planet to live for a given period.
+
+        Args:
+            day_number (int): the actual number of days lived.
+        """        
         self.logger.info(f"Starting day {day_number}")
         for individual in self.population:
 

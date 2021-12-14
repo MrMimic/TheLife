@@ -2,6 +2,8 @@ program:
   root_path: C:\Users\a760408\CODE\TheLife\
 
 world:
+  life:
+    days: 31  # Number of days to live
   population:
     limit: 2
 
