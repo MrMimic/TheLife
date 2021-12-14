@@ -1,12 +1,14 @@
 import os
+from math import hypot
 from random import choice, random
 from types import SimpleNamespace
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Tuple, Union
 from uuid import uuid4
 
 from planet.inanimated_elements.air_composition import Element
 from planet.inanimated_elements.biomass_composition import Nutrient
 from planet.living_things.dna.genes import Gene
+from utils.data import directions
 from utils.logger import get_logger
 
 
@@ -29,7 +31,7 @@ class Cell(object):
         self.logger.info(f"Cell creation: {self.__class__.__name__} ({self.cell_name})")
         """ Cell logger """
 
-        self.energy: int = 0
+        self.energy: int = 10
         """ The ennergy is the base fuel of the cell. """
 
         self.nucleotids = ["A", "T", "C", "G"]
@@ -41,6 +43,9 @@ class Cell(object):
         self._generate_dna()
         self._get_aquiered_genes()
         """ DNA is the genetic code of the cell. Generates it and get first genes. """
+
+        self.position: Tuple[int, int] = (0, 0)
+        """ Cell position on the planet. """
 
     def _generate_dna(self) -> None:
         """
@@ -159,7 +164,7 @@ class Cell(object):
 
         Args:
             air_composition List[Element]: The list of resources found in the air.
-        """        
+        """
         possible_breathing = self._find_usable_resource(medium_composition=air_composition)
         if possible_breathing is not None:
             self._restaure(resources=possible_breathing, mode="breathing")
@@ -170,10 +175,35 @@ class Cell(object):
 
         Args:
             biomass_composition (List[Nutrient]): The list of resources found in the biomass.
-        """        
+        """
         possible_nutrients = self._find_usable_resource(medium_composition=biomass_composition)
         if possible_nutrients is not None:
             self._restaure(resources=possible_nutrients, mode="eating")
+
+    def move(self) -> None:
+        """
+        Move the cell to a new position.
+        """
+        # Check if the cell can move
+        if self.energy > 0:
+            # Maximum radius is computed from the energy of the cell (one energy unit = one distance unit)
+            max_steps = self.energy / 2
+            original_position = self.position
+            steps = 0
+            while steps < max_steps:
+                direction = choice(list(directions.keys()))
+                # Compute the new position
+                new_position = (self.position[0] + directions[direction][0],
+                                self.position[1] + directions[direction][1])
+                self.logger.debug(f"Cell moved from {self.position} to {new_position} (direction: {direction})")
+                self.position = new_position
+                steps += 1
+                # Moving forward cost energy
+                self.energy -= 1
+            # If the cell has not moved, it is not able to move anymore
+            distance = round(hypot(original_position[0] - self.position[0], original_position[1] - self.position[1]), 3)
+            self.logger.info(
+                f"Cell moved {distance} distance units (from {original_position} to {self.position}) in {steps} steps")
 
     def reproduce(self) -> None:
         """

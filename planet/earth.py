@@ -68,8 +68,8 @@ class Earth(object):
             individual.mutate()
 
             # Process environment with genes (need energy)
-
+            individual.move()
             # Reproduce
 
-            # Sleep
+            # Sleep / die
             individual.sleep()
