@@ -5,12 +5,13 @@ from typing import List, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
+from planet.earth import Biome
 from planet.inanimated_elements.air_composition import Element
 from planet.inanimated_elements.biomass_composition import Nutrient
 from planet.living_things.dna.genes import Gene
 from utils.data import directions
 from utils.logger import get_logger
-from utils.maths import point_is_in_map, compute_distance
+from utils.maths import compute_distance, point_is_in_map
 
 
 class Cell(object):
@@ -48,8 +49,10 @@ class Cell(object):
         """ DNA is the genetic code of the cell. Generates it and get first genes. """
 
         self.position: Tuple[int, int] = (0.5, 0.5)
-        self.last_position: Tuple[int, int] = (0.5, 0.5)
+        self.biome = None
+        self.last_position: Tuple[int, int] = self.position
         self.positions: List[Tuple[int, int]] = [self.position]
+        self.visited_biomes: List[Biome] = []
         """ Cell position on the planet. Initiated at 0.5 to stay in the middle of the biomes. """
 
         self.is_alive: bool = True
@@ -140,9 +143,12 @@ class Cell(object):
             Optional[List[Union[Element, Nutrient]]]: None if nothing cxan be process, list otherwise.
         """
         acquired_element_process = [gene.process_component for gene in self.gene_list if gene.acquired]
-        usable_resource = [
-            element for element in medium_composition if element.name.lower() in acquired_element_process
-        ]
+        try:
+            usable_resource = [
+                element for element in medium_composition.contains if element.name.lower() in acquired_element_process
+            ]
+        except AttributeError:  # The first biome contains nothing
+            return None
         if len(usable_resource) == 0:
             return None
         else:
@@ -159,7 +165,7 @@ class Cell(object):
         # Up ennergy with the one that have been found
         for resource in resources:
             # Increase ennergy regarding the proportion of the gas
-            self.logger.debug(f"Cell {mode} {resource.name}: {resource.percentage}%, {resource.energy} EU restaured")
+            self.logger.info(f"Cell {mode} {resource.name}: {resource.percentage}%, {resource.energy} EU restaured")
             # Here, the energy restaured should correspond to the actual energy of the element
             if self.energy < self.configuration.cells.energy.maximum:
                 if self.energy + resource.energy < self.configuration.cells.energy.maximum:
@@ -168,34 +174,50 @@ class Cell(object):
                     self.logger.info(f"Cell EU is filled up, by {mode} {resource.name}")
                     self.energy = self.configuration.cells.energy.maximum
 
-    def breathe(self, air_composition: List[Element]) -> None:
+    def breathe(self) -> None:
         """
         Breathe the air of the planet to get energy from gas.
 
         Args:
             air_composition List[Element]: The list of resources found in the air.
         """
-        possible_breathing = self._find_usable_resource(medium_composition=air_composition)
+        possible_breathing = self._find_usable_resource(medium_composition=self.biome)
         if possible_breathing is not None:
             self._restaure(resources=possible_breathing, mode="breathing")
 
-    def eat(self, biomass_composition: List[Nutrient]) -> None:
+    def eat(self) -> None:
         """
         Eat the biomass of the planet to get energy from food.
 
         Args:
             biomass_composition (List[Nutrient]): The list of resources found in the biomass.
         """
-        possible_nutrients = self._find_usable_resource(medium_composition=biomass_composition)
+        possible_nutrients = self._find_usable_resource(medium_composition=self.biome)
         if possible_nutrients is not None:
             self._restaure(resources=possible_nutrients, mode="eating")
 
-    def move(self) -> None:
+    def _find_actual_biome(self, biomes: List[Biome], position: List[int]) -> Biome:
+        """
+        Find the actual biome of the cell.
+
+        Args:
+            biomes (List[Biome]): The list of biomes.
+            position (List[int]): The position of the cell.
+
+        Returns:
+            Biome: The actual biome of the cell.
+        """
+        for biome in biomes:
+            if point_is_in_map(map_coords=[biome.coord_1, biome.coord_2], point_coordinates=position):
+                return biome
+
+    def move(self, biomes: List[Biome]) -> None:
         """
         Move the cell to a new position.
         """
         # Check if the cell can move
         if self.energy > 0:
+
             # Maximum radius is computed from the energy of the cell (one EU = one DU)
             max_steps = self.energy / 2
             self.last_position = self.position
@@ -205,6 +227,7 @@ class Cell(object):
                 # Compute the new position
                 new_position = (self.position[0] + directions[direction][0],
                                 self.position[1] + directions[direction][1])
+
                 # Check if the new position is not out of the map
                 map_size = self.configuration.world.size
                 map_coords = [[-map_size, -map_size], [map_size, map_size]]
@@ -213,9 +236,15 @@ class Cell(object):
                     self.position = new_position
                     steps += 1
                     self.energy -= 1  # Moving forward cost energy
+
+                    # Check if the new position is in a new biome
+                    self.biome = self._find_actual_biome(biomes=biomes, position=self.position)
+
             # Keep a track of all positions of the cell for drawing
             self.positions.append(self.position)
-            # If the cell has not moved, it is not able to move anymore
+            self.visited_biomes.append(self.biome)
+
+            # Check the distance that the cell moved
             distance = compute_distance(self.last_position, self.position)
             self.logger.info(
                 f"Cell moved {distance} distance units (from {self.last_position} to {self.position}) in {steps} steps")

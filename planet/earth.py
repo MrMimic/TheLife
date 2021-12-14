@@ -115,14 +115,14 @@ class Earth(object):
                 if individual.is_alive:
 
                     # Get ennergy (breathe / eat)
-                    individual.breathe(air_composition=self.atmosphere.elements)
-                    individual.eat(biomass_composition=self.biomass.components)
+                    individual.breathe()
+                    individual.eat()
 
                     # Mutate and get acquired genes
                     individual.mutate()
 
                     # Process environment with genes (need energy)
-                    individual.move()
+                    individual.move(biomes=self.biomes)
 
                     # Reproduce
 

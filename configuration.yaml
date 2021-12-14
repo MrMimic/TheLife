@@ -15,7 +15,7 @@ world:
   # `population_limit` individuals will be added
   size: 8
   simulation_duration: 15
-  population_limit: 20
+  population_limit: 1
 
 cells:
   dna_size: 0.001  # In Mbp (milions base pairs)
