@@ -10,7 +10,7 @@ from planet.inanimated_elements.biomass_composition import Nutrient
 from planet.living_things.dna.genes import Gene
 from utils.data import directions
 from utils.logger import get_logger
-
+import numpy as np
 
 class Cell(object):
     def __init__(self, run_path: str, configuration: SimpleNamespace) -> None:
@@ -52,6 +52,9 @@ class Cell(object):
 
         self.is_alive: bool = True
         """ Cell is alive or not. """
+
+        self.color = np.random.rand(3, )
+        """ Cell color, for plotting. """
 
     def _generate_dna(self) -> None:
         """

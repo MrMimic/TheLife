@@ -8,5 +8,5 @@ if __name__ == "__main__":
     configuration = read_configuration("configuration.yaml")
     world = Earth(configuration)
     world.populate(AnimalCell)
-    for day in range(1, configuration.world.life.days + 1):
+    for day in range(1, configuration.world.simulation_duration + 1):
         world.live(day)

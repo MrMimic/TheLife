@@ -55,7 +55,7 @@ class Earth(object):
             organism (Any): the organism to populate the planet with.
         """
         # The organism type is provided for now
-        max_population = self.configuration.world.population.limit
+        max_population = self.configuration.world.population_limit
         self.population = [organism(self.run_folder, self.configuration) for _ in range(max_population)]
         self.logger.info(f"Planet populated with {max_population} {organism.__name__} individuals")
 
@@ -93,5 +93,5 @@ class Earth(object):
             self.drawer.draw_world(day=day_number, world=self)
 
         # Draw a GIF representing the world during the run
-        if day_number == self.configuration.world.life.days:
+        if day_number == self.configuration.world.simulation_duration:
             self.drawer.create_world_gif()

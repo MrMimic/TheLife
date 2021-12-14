@@ -24,8 +24,8 @@ class Drawer:
         plt.figure(figsize=(self.configuration.program.drawings.height, self.configuration.program.drawings.width))
 
         # Get the plot limits from the configuration
-        plt.xlim(self.configuration.world.size)
-        plt.ylim(self.configuration.world.size)
+        plt.xlim(-self.configuration.world.size, self.configuration.world.size)
+        plt.ylim(-self.configuration.world.size, self.configuration.world.size)
 
         # Draw the start of all cells
         plt.plot(0, 0, alpha=0.5, marker="o", color="black", markersize=5)
@@ -38,10 +38,10 @@ class Drawer:
             for position in individual.positions:
                 x_values = [last_position[0], position[0]]
                 y_values = [last_position[1], position[1]]
-                plt.plot(x_values, y_values, color="red", alpha=alpha, linewidth=0.5, linestyle="-")
+                plt.plot(x_values, y_values, color=individual.color, alpha=alpha, linewidth=0.5, linestyle="-")
                 if position != (0, 0):
                     # The alpha of the point must increase as the cell moves are looped from the first
-                    plt.plot(position[0], position[1], alpha=alpha, marker="o", color="red", markersize=5)
+                    plt.plot(position[0], position[1], alpha=alpha, marker="o", color=individual.color, markersize=5)
                     alpha += alpha_step
                     last_position = position
 

@@ -8,11 +8,9 @@ program:
     width: 10  # In inches
 
 world:
-  size: 15
-  life:
-    days: 15  # Number of days to live
-  population:
-    limit: 1
+  size: 8
+  simulation_duration: 15  # Number of days to live
+  population_limit: 3
 
 cells:
   dna_size: 0.001  # In Mbp (milions base pairs)
