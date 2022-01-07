@@ -1,5 +1,5 @@
 program:
-  root_path: C:\Users\a760408\CODE\TheLife\
+  root_path: ./
   logs:
     level: info  # debug, info, warning, error
   drawings:
@@ -14,7 +14,7 @@ world:
   # The simulation runs for `simulation_duration` days
   # `population_limit` individuals will be added
   size: 8
-  simulation_duration: 15
+  simulation_duration: 100
   population_limit: 1
 
 cells:

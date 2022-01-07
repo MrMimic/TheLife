@@ -12,7 +12,7 @@ class AnimalCell(Cell):
     def __init__(self, run_path: str, configuration: SimpleNamespace) -> None:
         # Possible genes for this cell. Aquired by DNA mutation.
         # Genes are only present at start if you get lucky during DNA initialisation.
-        self.gene_pool: List[Gene] = [
+        gene_pool: List[Gene] = [
             # Gas processing from the atmosphere
             Gene(name="NAR1", process_component="nitrogen", sequence="AATCGA", compopent_from="air"),
             Gene(name="OX42", process_component="oxygen", sequence="ATTGCA", compopent_from="air"),
@@ -23,4 +23,4 @@ class AnimalCell(Cell):
             Gene(name="CarBas3", process_component="carbon", sequence="ATTATTGAC", compopent_from="biomass"),
         ]
         # Initialise cell
-        super().__init__(run_path, configuration)
+        super().__init__(run_path, configuration, gene_pool)

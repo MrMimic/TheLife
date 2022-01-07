@@ -15,7 +15,8 @@ from utils.maths import compute_distance, point_is_in_map
 
 
 class Cell(object):
-    def __init__(self, run_path: str, configuration: SimpleNamespace) -> None:
+
+    def __init__(self, run_path: str, configuration: SimpleNamespace, gene_pool: List[Gene]) -> None:
         """
         A cell is the basic unit of life on the planet.
 
@@ -43,6 +44,9 @@ class Cell(object):
 
         self.gene_list: List[Gene] = []
         """ Genes allow cells to have a variety of traits. """
+
+        self.gene_pool: List[Gene] = gene_pool
+        """ Genetic attributes of specific cells."""
 
         self._generate_dna()
         self._get_aquiered_genes()
@@ -131,8 +135,8 @@ class Cell(object):
                 if key == element:
                     return self.__getattribute__(facility)[key]
 
-    def _find_usable_resource(
-            self, medium_composition: List[Union[Element, Nutrient]]) -> Optional[List[Union[Element, Nutrient]]]:
+    def _find_usable_resource(self, medium_composition: List[Union[Element, Nutrient]],
+                              from_medium: str) -> Optional[List[Union[Element, Nutrient]]]:
         """
         Find a usable resource in the medium composition.
 
@@ -152,7 +156,8 @@ class Cell(object):
         if len(usable_resource) == 0:
             return None
         else:
-            self.logger.info(f"Found resources in biome: {', '.join([element.name for element in usable_resource])}")
+            self.logger.info(
+                f"Found resources in biome ({from_medium}): {', '.join([element.name for element in usable_resource])}")
             return usable_resource
 
     def _restaure(self, resources: List[Union[Element, Nutrient]], mode: str) -> None:
@@ -182,7 +187,7 @@ class Cell(object):
         Args:
             air_composition List[Element]: The list of resources found in the air.
         """
-        possible_breathing = self._find_usable_resource(medium_composition=self.biome)
+        possible_breathing = self._find_usable_resource(medium_composition=self.biome, from_medium="air")
         if possible_breathing is not None:
             self._restaure(resources=possible_breathing, mode="breathing")
 
@@ -193,7 +198,7 @@ class Cell(object):
         Args:
             biomass_composition (List[Nutrient]): The list of resources found in the biomass.
         """
-        possible_nutrients = self._find_usable_resource(medium_composition=self.biome)
+        possible_nutrients = self._find_usable_resource(medium_composition=self.biome, from_medium="eat")
         if possible_nutrients is not None:
             self._restaure(resources=possible_nutrients, mode="eating")
 

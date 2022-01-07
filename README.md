@@ -2,6 +2,7 @@
 
 ## To do
 
+- Mutations more likely outside of good genes, inside bad ones, base outside of genes
 - Reproduction (division) to get more cells
 - Cell move regarding the exploitation/exploration trade-offs
 - Attraction mechanism between cells when the biome is cool
