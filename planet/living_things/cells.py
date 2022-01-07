@@ -45,6 +45,9 @@ class Cell(object):
         self.gene_list: List[Gene] = []
         """ Genes allow cells to have a variety of traits. """
 
+        self.protected_codons: List[List[int]] = []
+        """ Genes that are beneficial are protected from mutation. Here are their indexes."""
+
         self.gene_pool: List[Gene] = gene_pool
         """ Genetic attributes of specific cells."""
 
@@ -77,8 +80,14 @@ class Cell(object):
         Stores a list of acquired genes as attributes.
         """
         old_gene_list = self.gene_list
+        protected_codons = []
         for gene in self.gene_pool:
             if gene.sequence in self.dna and not gene.acquired:
+                # Store their indexes if the gene is beneficial
+                if gene.beneficial:
+                    gene_start = self.dna.find(gene.sequence)
+                    gene_stop = gene_start + len(gene.sequence)
+                    protected_codons.append([gene_start, gene_stop])
                 self.logger.info(
                     f"Acquisition of gene {gene.name} to process {gene.process_component} from {gene.compopent_from}")
                 gene.acquired = True
@@ -87,6 +96,9 @@ class Cell(object):
                 gene.acquired = False
         # Store acquired genes
         self.gene_list = [gene for gene in self.gene_pool if gene.acquired]
+        # Store their indexes
+        self.protected_codons = protected_codons
+
         if len(self.gene_list) > len(old_gene_list):
             self.logger.info(
                 f"New gene acquired: {', '.join([gene.name for gene in [g for g in self.gene_list if g not in old_gene_list]])}"
@@ -102,22 +114,38 @@ class Cell(object):
         """
         # Short recap of the cell
         cell_genes = ', '.join([gene.name for gene in self.gene_list]) if len(self.gene_list) > 0 else None
-        self.logger.info(f"Cell energy: {self.energy}, cell genes: {cell_genes}")
+        self.logger.info(f"Cell energy: {self.energy}, cell genes: {cell_genes} ({self.protected_codons})")
 
         # Mutate all nucleotides
         for nucleotid_index in range(len(self.dna)):
             # Generate a random number between 0 and 1 and mutate if needed
-            if random() <= self.configuration.cells.evolution.mutation_rate:
-                # Simply pick a new nucleotid randomly from now
-                old_nucleotid = self.dna[nucleotid_index]
-                possible_nucleotids = [nucleotid for nucleotid in self.nucleotids if nucleotid != old_nucleotid]
-                new_nucleotid = choice(possible_nucleotids)
-                new_dna = list(self.dna)
-                new_dna[nucleotid_index] = new_nucleotid
-                self.dna = "".join(new_dna)
-                self.logger.debug(f"Mutation of {old_nucleotid} to {new_nucleotid} in position {nucleotid_index}")
+            if random() <= self.configuration.cells.evolution.mutation_rate_general:
+                # If the nucleotid is inside a gene
+                if any([nucleotid_index in list(range(pc[0], pc[1])) for pc in self.protected_codons]):
+                    if random() <= self.configuration.cells.evolution.mutation_rate_in_genes:
+                        self.logger.alert("Mutation in DNA in a gene.")
+                        self._mutate_nucleotid(nucleotid_index)
+                # Else, outside a gene, it already won the chance to mutate
+                else:
+                    self._mutate_nucleotid(nucleotid_index)
+
         # Once all mutations are done, check if new genes have been acquired
         self._get_aquiered_genes()
+
+    def _mutate_nucleotid(self, nucleotid_index: int) -> None:
+        """
+        Change a nucleotid into another one in the DNA.
+
+        Args:
+            nucleotid_index (int): index of the nucleotid to mutate.
+        """
+        old_nucleotid = self.dna[nucleotid_index]
+        possible_nucleotids = [nucleotid for nucleotid in self.nucleotids if nucleotid != old_nucleotid]
+        new_nucleotid = choice(possible_nucleotids)
+        new_dna = list(self.dna)
+        new_dna[nucleotid_index] = new_nucleotid
+        self.dna = "".join(new_dna)
+        self.logger.debug(f"Mutation of {old_nucleotid} to {new_nucleotid} in position {nucleotid_index}")
 
     def can_process(self, element: str) -> bool:
         """
@@ -187,9 +215,10 @@ class Cell(object):
         Args:
             air_composition List[Element]: The list of resources found in the air.
         """
-        possible_breathing = self._find_usable_resource(medium_composition=self.biome, from_medium="air")
+        mode = "breathing"
+        possible_breathing = self._find_usable_resource(medium_composition=self.biome, from_medium=mode)
         if possible_breathing is not None:
-            self._restaure(resources=possible_breathing, mode="breathing")
+            self._restaure(resources=possible_breathing, mode=mode)
 
     def eat(self) -> None:
         """
@@ -198,9 +227,10 @@ class Cell(object):
         Args:
             biomass_composition (List[Nutrient]): The list of resources found in the biomass.
         """
-        possible_nutrients = self._find_usable_resource(medium_composition=self.biome, from_medium="eat")
+        mode = "eating"
+        possible_nutrients = self._find_usable_resource(medium_composition=self.biome, from_medium=mode)
         if possible_nutrients is not None:
-            self._restaure(resources=possible_nutrients, mode="eating")
+            self._restaure(resources=possible_nutrients, mode=mode)
 
     def _find_actual_biome(self, biomes: List[Biome], position: List[int]) -> Biome:
         """

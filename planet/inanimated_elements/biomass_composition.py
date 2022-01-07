@@ -24,5 +24,5 @@ class Biomass:
     def __init__(self) -> None:
         self.components: List[Nutrient] = [
             Nutrient(name="Carbon", percentage=0.7, energy=4, comes_from="biomass"),
-            Nutrient(name="Nitrogen", percentage=0.3, energy=2, comes_from="biomass")
+            Nutrient(name="Chlore", percentage=0.3, energy=2, comes_from="biomass")
         ]

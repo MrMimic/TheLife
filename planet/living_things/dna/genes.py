@@ -18,5 +18,8 @@ class Gene:
     sequence: str
     """ Genetic sequence of the gene"""
 
+    beneficial: bool
+    """ A gene can be harmfull (like giving cancer) or good for health (process nutrient) """
+
     acquired: bool = False
     """ Whether this gene has been acquired byt the cell """
